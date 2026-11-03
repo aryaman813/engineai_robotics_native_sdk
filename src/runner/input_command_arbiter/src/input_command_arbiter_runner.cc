@@ -3,6 +3,8 @@
 #include "input_command_arbiter/rc02_input_adapter.h"
 #include "input_command_arbiter/virtual_gamepad_input_adapter.h"
 
+#include "input_command_arbiter/motion_state_request_input_adapter.h"
+
 #include <glog/logging.h>
 
 namespace runner {
@@ -12,6 +14,8 @@ InputCommandArbiterRunner::InputCommandArbiterRunner(std::string_view name,
     : BasicRunner(name, data_store) {
   RegisterHardwareSource("rc02", std::make_shared<Rc02InputAdapter>("rc02", data_store));
   RegisterHardwareSource("gamepad", std::make_shared<GamepadInputAdapter>("gamepad", data_store));
+  RegisterOverrideSource("motion_state_request",
+    std::make_shared<MotionStateRequestInputAdapter>("motion_state_request", data_store));
   RegisterOverrideSource("virtual_gamepad",
                          std::make_shared<VirtualGamepadInputAdapter>("virtual_gamepad", data_store));
 
@@ -58,10 +62,70 @@ void InputCommandArbiterRunner::Run() {
     }
   }
 
+  // for (auto& source : override_sources_) {
+  //   static_cast<void>(source->Run());
+  //   if (source->IsActive()) {
+  //     source->Process(result);
+  //   }
+  // }
+
+  // data_store_->gamepad_info.Set(result);
+  
+    // Capture hardware stop before any override can erase it.
+  bool stop_requested = result.LB && result.RB;
+  bool virtual_active = false;
+
+  struct OverrideSnapshot {
+    std::shared_ptr<BaseInputAdapter> source;
+    data::GamepadInfo input;
+  };
+  std::vector<OverrideSnapshot> snapshots;
+
+  // Read each source independently before deciding what wins.
   for (auto& source : override_sources_) {
     static_cast<void>(source->Run());
-    if (source->IsActive()) {
-      source->Process(result);
+
+    if (!source->IsActive()) {
+      continue;
+    }
+
+    data::GamepadInfo input;
+    input.Reset();
+    source->Process(input);
+
+    stop_requested = stop_requested || (input.LB && input.RB);
+
+    if (source->GetName() == "virtual_gamepad") {
+      virtual_active = true;
+    }
+
+    snapshots.push_back({source, input});
+  }
+
+  // Discard ordinary ROS commands when virtual control or a stop wins.
+  // This prevents them from replaying when virtual control disappears.
+  for (auto& source : override_sources_) {
+    auto request =
+        std::dynamic_pointer_cast<MotionStateRequestInputAdapter>(source);
+
+    if (request && (stop_requested || virtual_active)) {
+      request->Cancel();
+    }
+  }
+
+  if (stop_requested) {
+    // Send an exact, clean stop combo through the normal FSM input.
+    data::GamepadTool tool;
+    result = tool.ConstructGamepadInfo({"LB", "RB"});
+    result.enforce_command = false;
+  } else {
+    for (const auto& snapshot : snapshots) {
+      if (virtual_active &&
+          snapshot.source->GetName() == "motion_state_request") {
+        continue;
+      }
+
+      result = snapshot.input;
     }
   }
 

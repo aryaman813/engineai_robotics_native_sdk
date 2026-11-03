@@ -1,9 +1,15 @@
 activated_node:
   - hardware_interface_node
+  - motion_state_request_node
 
 manager_node:
   subscribe_topics:
     node_control: /motion/node_control
+  
+motion_state_request_node:
+  enable: true
+  subscribe_topics:
+    state_request: /motion/state_request
 
 hardware_interface_node:
   enable: true

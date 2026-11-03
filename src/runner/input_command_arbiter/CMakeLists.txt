@@ -27,6 +27,8 @@ target_include_directories(${CURRENT_TARGET_NAME}
   PUBLIC 
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  PRIVATE
+    ${PROJECT_SOURCE_DIR}/src  
 )
 
 # Set link libraries of target

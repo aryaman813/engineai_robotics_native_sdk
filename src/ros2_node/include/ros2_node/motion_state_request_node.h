@@ -16,7 +16,7 @@ namespace ros2 {
             MotionStateRequestNode(
                 const std::shared_ptr<data::DataStore>& data_store,
                 const std::string& param_tag,
-                const std::string& node_name = "motion_state_request_node");
+                const std::string& node_name = "motion_state_request_node")
                 : LogicNode(data_store, param_tag, node_name) {}
             
             ~MotionStateRequestNode() override = default;
@@ -28,7 +28,7 @@ namespace ros2 {
 
             rclcpp::Subscription<
                 interface_protocol::msg::MotionStateRequest>::SharedPtr
-                state_request_subcriber_;
+                state_request_subscriber_;
             
             std::shared_ptr<data::MotionStateRequestMailbox> request_mailbox_;
     };

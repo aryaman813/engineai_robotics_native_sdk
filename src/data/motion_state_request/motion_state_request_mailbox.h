@@ -16,6 +16,12 @@ namespace data {
         public:
             void Submit(std::string target_motion_name) {
                 std::lock_guard<std::mutex> lock(mutex_);
+
+                if (pending_ &&
+                    pending_ ->target_motion_name == "passive" &&
+                    target_motion_name != "passive") {
+                    return;
+                }
                 pending_ = MotionStateRequest{
                     std::move(target_motion_name),
                     std::chrono::steady_clock::now(),
