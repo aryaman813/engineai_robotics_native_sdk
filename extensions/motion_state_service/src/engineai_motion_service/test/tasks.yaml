@@ -1,0 +1,12 @@
+# Test fixture for the relevant existing PM01 manual edges.
+tasks:
+  - motion: idle
+    manual_transition: [passive]
+  - motion: passive
+    manual_transition: [idle, pd_stand]
+  - motion: pd_stand
+    manual_transition: [passive, walk, dance]
+  - motion: walk
+    manual_transition: [passive, pd_stand, dance]
+  - motion: dance
+    manual_transition: [passive, pd_stand, walk]

@@ -1,0 +1,11 @@
+# Exactly one target; no automatic intermediate motions.
+string target_motion_name
+---
+# Passed service-side validation, not necessarily accepted by the SDK FSM.
+bool valid
+# A command was published to the existing SDK topic.
+bool command_sent
+# Requested target was observed in fresh feedback after dispatch.
+bool state_changed
+string current_motion_name
+string message
