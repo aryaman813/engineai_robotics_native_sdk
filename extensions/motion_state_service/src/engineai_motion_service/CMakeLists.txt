@@ -16,6 +16,7 @@ find_path(LCM_INCLUDE_DIR lcm/lcm-cpp.hpp
   HINTS /opt/engineai_robotics_third_party/include REQUIRED)
 find_library(LCM_LIBRARY lcm
   HINTS /opt/engineai_robotics_third_party/lib REQUIRED)
+get_filename_component(LCM_LIBRARY_DIR "${LCM_LIBRARY}" DIRECTORY)
 find_path(SDK_LCM_INCLUDE_DIR lcm_data/TaskState.hpp
   HINTS "${SDK_ROOT}/core/include/data" REQUIRED)
 
@@ -32,6 +33,10 @@ target_compile_options(motion_service_impl PRIVATE -Wall -Wextra -Wpedantic)
 
 add_executable(motion_state_service src/main.cpp)
 target_link_libraries(motion_state_service motion_service_impl)
+# colcon strips build-tree RPATH on install. Retain the bundled LCM location
+# and this package's generated service library without a manual environment edit.
+set_target_properties(motion_state_service PROPERTIES
+  INSTALL_RPATH "\$ORIGIN/..;${LCM_LIBRARY_DIR}")
 install(TARGETS motion_state_service DESTINATION lib/${PROJECT_NAME})
 install(DIRECTORY srv DESTINATION share/${PROJECT_NAME})
 

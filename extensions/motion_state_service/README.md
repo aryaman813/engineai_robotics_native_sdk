@@ -111,6 +111,19 @@ out of the repo, supply its location with
 Build artifacts stay under this folder's `build/`, `install/`, and `log/`.
 The SDK's `./build.sh` does not build this separate package.
 
+The installed executable records the LCM library directory found at build time
+in its runtime search path, together with its own package library directory. If
+an older build reports `liblcm.so.1: cannot open shared object file`, rebuild this
+package using the commands above. For a temporary fix in the current terminal:
+
+```bash
+export LD_LIBRARY_PATH="/opt/engineai_robotics_third_party/lib:${LD_LIBRARY_PATH:-}"
+```
+
+When moving the executable to another machine, install the same runtime
+dependencies there. If its LCM library directory differs, rebuild there or add
+the correct directory to `LD_LIBRARY_PATH`.
+
 ## Run with Mujoco first
 
 Start the simulator and existing SDK with `pm01_edu`, `active_mode: sim`, domain

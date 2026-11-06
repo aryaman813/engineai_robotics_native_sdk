@@ -108,8 +108,25 @@ void InputCommandArbiterRunner::Run() {
     auto request =
         std::dynamic_pointer_cast<MotionStateRequestInputAdapter>(source);
 
+    // if (request && (stop_requested || virtual_active)) {
+    //   request->Cancel();
+    // }
     if (request && (stop_requested || virtual_active)) {
-      request->Cancel();
+      data::GamepadInfo ros_input;
+      ros_input.Reset();
+
+      if (request->IsActive()) {
+        request->Process(ros_input);
+      }
+
+      const bool ros_passive_active =
+          request->IsActive() && ros_input.LB && ros_input.RB;
+
+      // Preserve passive until the adapter's existing 500 ms expiry.
+      // Cancel ordinary requests so they cannot replay after a stop.
+      if (!ros_passive_active) {
+        request->Cancel();
+      }
     }
   }
 
